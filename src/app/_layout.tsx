@@ -27,6 +27,30 @@ export default function RootLayout() {
             name="modal"
             options={{ presentation: "modal", title: "Modal" }}
           />
+          <Stack.Screen
+            name="users/index"
+            options={{ title: "Users", headerShown: false }}
+          />
+          <Stack.Screen
+            name="users/[id]"
+            options={{ title: "User Details", headerShown: false }}
+          />
+          <Stack.Screen
+            name="users/new"
+            options={{
+              title: "New User",
+              headerShown: false,
+              presentation: "modal",
+            }}
+          />
+          <Stack.Screen
+            name="users/[id]/edit"
+            options={{
+              title: "Edit User",
+              headerShown: false,
+              presentation: "modal",
+            }}
+          />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>
