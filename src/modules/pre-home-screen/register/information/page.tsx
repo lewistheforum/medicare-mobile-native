@@ -9,13 +9,17 @@ import {
   View,
 } from "react-native";
 
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 
 const BRAND_BLUE = "#0D5BFF";
 const BG = "#F3F5FB";
 
 export default function RegisterInformationScreen() {
-  const [phone, setPhone] = useState("0336888842");
+  const { phone: phoneParam } = useLocalSearchParams<{ phone?: string }>();
+
+  const [phone, setPhone] = useState(
+    typeof phoneParam === "string" ? phoneParam : ""
+  );
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);

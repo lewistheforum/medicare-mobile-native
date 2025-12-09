@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Pressable,
   SafeAreaView,
@@ -10,6 +10,7 @@ import {
 } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
+import auth from "@react-native-firebase/auth";
 import { router } from "expo-router";
 
 const BRAND_BLUE = "#0D5BFF";
@@ -18,6 +19,46 @@ const BG = "#F3F5FB";
 export default function RegisterScreen() {
   const [phone, setPhone] = useState("");
   const [agree, setAgree] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const normalizedPhone = useMemo(() => {
+    // Convert any user input to E.164 with default country VN (+84)
+    const cleaned = phone.replace(/\s/g, "");
+    if (!cleaned) return "";
+
+    // If user already typed a + followed by digits, respect it
+    if (/^\+\d+$/.test(cleaned)) return cleaned;
+
+    const digits = cleaned.replace(/\D/g, "");
+    if (!digits) return "";
+    if (digits.startsWith("84")) return `+${digits}`;
+    if (digits.startsWith("0")) return `+84${digits.slice(1)}`;
+    return `+84${digits}`;
+  }, [phone]);
+
+  const registerWithPhoneNumber = async () => {
+    if (!canSubmit || sending || !normalizedPhone) return;
+    setError(null);
+    setSending(true);
+    try {
+      console.log("normalizedPhone", normalizedPhone);
+
+      router.push({
+        pathname: "/pre-home/register/otp",
+        params: {
+          phone: normalizedPhone,
+          verificationId: (await auth().signInWithPhoneNumber(normalizedPhone))
+            .verificationId,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      setError("Không thể gửi OTP. Vui lòng thử lại.");
+    } finally {
+      setSending(false);
+    }
+  };
 
   const canSubmit = phone.length >= 8 && agree;
 
@@ -83,10 +124,14 @@ export default function RegisterScreen() {
           <Pressable
             disabled={!canSubmit}
             style={[styles.primaryBtn, !canSubmit && styles.btnDisabled]}
-            onPress={() => router.push("/pre-home/register/otp")}
+            onPress={registerWithPhoneNumber}
           >
-            <Text style={styles.primaryText}>Đăng ký tài khoản</Text>
+            <Text style={styles.primaryText}>
+              {sending ? "Đang gửi..." : "Đăng ký tài khoản"}
+            </Text>
           </Pressable>
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
           <Pressable
             style={styles.secondaryBtn}
@@ -239,5 +284,11 @@ const styles = StyleSheet.create({
     color: BRAND_BLUE,
     fontSize: 17,
     fontWeight: "800",
+  },
+  errorText: {
+    marginTop: 8,
+    color: "#E53935",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

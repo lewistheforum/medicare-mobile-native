@@ -8,7 +8,8 @@ import {
   View,
 } from "react-native";
 
-import { router } from "expo-router";
+import auth from "@react-native-firebase/auth";
+import { router, useLocalSearchParams } from "expo-router";
 
 const BRAND_BLUE = "#0D5BFF";
 const BG = "#F3F5FB";
@@ -16,6 +17,17 @@ const BG = "#F3F5FB";
 export default function RegisterOtpScreen() {
   const [otp, setOtp] = useState("");
   const [seconds, setSeconds] = useState(60);
+  const [error, setError] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [resending, setResending] = useState(false);
+
+  const { phone: phoneParam, verificationId: verificationIdParam } =
+    useLocalSearchParams<{ phone?: string; verificationId?: string }>();
+
+  const phone = typeof phoneParam === "string" ? phoneParam : "";
+  const [verificationId, setVerificationId] = useState<string>(
+    typeof verificationIdParam === "string" ? verificationIdParam : ""
+  );
 
   useEffect(() => {
     if (seconds <= 0) return;
@@ -31,15 +43,38 @@ export default function RegisterOtpScreen() {
     return `${m}:${s}`;
   }, [seconds]);
 
-  const handleResend = () => {
-    // TODO: wire resend OTP API
-    setSeconds(60);
+  const handleResend = async () => {
+    if (!phone || resending) return;
+    setResending(true);
+    setError(null);
+    try {
+      const confirmation = await auth().signInWithPhoneNumber(phone);
+      setVerificationId(confirmation.verificationId ?? "");
+      setSeconds(60);
+    } catch (err) {
+      console.error(err);
+      setError("Gửi lại OTP thất bại. Vui lòng thử lại.");
+    } finally {
+      setResending(false);
+    }
   };
 
-  const handleSubmit = () => {
-    if (otp.length === 6) {
-      // TODO: verify OTP flow then navigate
-      router.push("/pre-home/register/information");
+  const handleSubmit = async () => {
+    if (otp.length !== 6 || !verificationId || verifying) return;
+    setVerifying(true);
+    setError(null);
+    try {
+      const credential = auth.PhoneAuthProvider.credential(verificationId, otp);
+      await auth().signInWithCredential(credential);
+      router.push({
+        pathname: "/pre-home/register/information",
+        params: { phone },
+      });
+    } catch (err) {
+      console.error(err);
+      setError("Mã OTP không hợp lệ hoặc đã hết hạn.");
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -66,6 +101,9 @@ export default function RegisterOtpScreen() {
         <Text style={styles.description}>
           Nhập mã OTP được gửi qua số điện thoại của bạn
         </Text>
+        {phone ? (
+          <Text style={styles.phoneText}>Số điện thoại: {phone}</Text>
+        ) : null}
 
         <View style={styles.otpRow}>
           <TextInput
@@ -82,20 +120,27 @@ export default function RegisterOtpScreen() {
           <Pressable
             style={[
               styles.submitBtn,
-              otp.length === 6 ? styles.submitEnabled : styles.submitDisabled,
+              otp.length === 6 && verificationId
+                ? styles.submitEnabled
+                : styles.submitDisabled,
             ]}
             onPress={handleSubmit}
-            disabled={otp.length !== 6}
+            disabled={otp.length !== 6 || !verificationId || verifying}
           >
-            <Text style={styles.submitText}>Xác nhận</Text>
+            <Text style={styles.submitText}>
+              {verifying ? "Đang xác nhận..." : "Xác nhận"}
+            </Text>
           </Pressable>
         </View>
 
         <Pressable onPress={handleResend} hitSlop={8} style={styles.resendWrap}>
-          <Text style={styles.resendText}>Không nhận được mã?</Text>
+          <Text style={styles.resendText}>
+            {resending ? "Đang gửi lại..." : "Không nhận được mã?"}
+          </Text>
         </Pressable>
 
         <Text style={styles.timer}>{formattedTime}</Text>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </View>
     </SafeAreaView>
   );
@@ -162,6 +207,10 @@ const styles = StyleSheet.create({
     color: "#3D4451",
     lineHeight: 22,
   },
+  phoneText: {
+    fontSize: 15,
+    color: "#1B3355",
+  },
   otpRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -213,6 +262,13 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: "800",
     color: BRAND_BLUE,
+    textAlign: "center",
+  },
+  errorText: {
+    marginTop: 8,
+    color: "#E53935",
+    fontSize: 14,
+    fontWeight: "600",
     textAlign: "center",
   },
 });
