@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "328673647962",
+    "project_id": "otp-mobile-bf441",
+    "storage_bucket": "otp-mobile-bf441.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:328673647962:android:feb7458010c850253b6763",
+        "android_client_info": {
+          "package_name": "com.lewisnguyenn.mobilemedicare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBXRXVNdExdZi2HythR5cAvQUeq1et6_Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
