@@ -1,12 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  Pressable,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import auth from "@react-native-firebase/auth";
 import { router, useLocalSearchParams } from "expo-router";
