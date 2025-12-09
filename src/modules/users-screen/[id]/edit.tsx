@@ -3,9 +3,13 @@ import { ThemedView } from "@/src/components/themed-view";
 import { Colors } from "@/src/constants/theme";
 import { useColorScheme } from "@/src/hooks/use-color-scheme";
 import { useAppDispatch, useAppSelector } from "@/src/store";
-import { createUser } from "@/src/store/slices/userSlice";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import {
+  clearCurrentUser,
+  fetchUserById,
+  updateUser,
+} from "@/src/store/slices/userSlice";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   ScrollView,
@@ -15,11 +19,12 @@ import {
   View,
 } from "react-native";
 
-export default function NewUserScreen() {
+export default function EditUserScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const dispatch = useAppDispatch();
   const colorScheme = useColorScheme();
-  const { loading } = useAppSelector((state) => state.users);
+  const { currentUser, loading } = useAppSelector((state) => state.users);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -32,11 +37,37 @@ export default function NewUserScreen() {
     address: "",
   });
 
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchUserById(id));
+    }
+    return () => {
+      dispatch(clearCurrentUser());
+    };
+  }, [id, dispatch]);
+
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        name: currentUser.name,
+        email: currentUser.email,
+        age: currentUser.age.toString(),
+        gender: currentUser.gender,
+        dob: currentUser.dob,
+        avatar: currentUser.avatar || "",
+        phone: currentUser.phone || "",
+        address: currentUser.address || "",
+      });
+    }
+  }, [currentUser]);
+
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async () => {
+    if (!currentUser) return;
+
     // Validation
     if (!formData.name.trim()) {
       Alert.alert("Error", "Name is required");
@@ -57,22 +88,33 @@ export default function NewUserScreen() {
 
     try {
       await dispatch(
-        createUser({
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          age: parseInt(formData.age),
-          gender: formData.gender,
-          dob: formData.dob,
-          avatar: formData.avatar.trim() || undefined,
-          phone: formData.phone.trim() || undefined,
-          address: formData.address.trim() || undefined,
+        updateUser({
+          id: currentUser.id,
+          userData: {
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            age: parseInt(formData.age),
+            gender: formData.gender,
+            dob: formData.dob,
+            avatar: formData.avatar.trim() || undefined,
+            phone: formData.phone.trim() || undefined,
+            address: formData.address.trim() || undefined,
+          },
         })
       ).unwrap();
       router.back();
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to create user");
+      Alert.alert("Error", error.message || "Failed to update user");
     }
   };
+
+  if (!currentUser) {
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedText>Loading...</ThemedText>
+      </ThemedView>
+    );
+  }
 
   const inputStyle = [
     styles.input,
@@ -87,7 +129,7 @@ export default function NewUserScreen() {
     <ThemedView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <ThemedText type="title" style={styles.title}>
-          Create New User
+          Edit User
         </ThemedText>
 
         <View style={styles.form}>
@@ -230,7 +272,7 @@ export default function NewUserScreen() {
             disabled={loading}
           >
             <ThemedText style={styles.submitButtonText}>
-              {loading ? "Creating..." : "Create User"}
+              {loading ? "Updating..." : "Update User"}
             </ThemedText>
           </TouchableOpacity>
         </View>

@@ -16,7 +16,7 @@ import {
   View,
 } from "react-native";
 
-export default function UsersListScreen() {
+export default function UsersScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const colorScheme = useColorScheme();
@@ -115,20 +115,20 @@ export default function UsersListScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <View>
-        <Link href={"/users" as any}>
-          <Link.Trigger>
-            <ThemedText type="subtitle">Back</ThemedText>
-          </Link.Trigger>
-        </Link>
-      </View>
       <View style={styles.header}>
+        <View style={styles.backButton}>
+          <Link href={"/users" as any}>
+            <Link.Trigger>
+              <ThemedText type="subtitle">Back</ThemedText>
+            </Link.Trigger>
+          </Link>
+        </View>
         <TouchableOpacity
           style={[
             styles.addButton,
             { backgroundColor: Colors[colorScheme ?? "light"].tint },
           ]}
-          onPress={() => router.push("/users/new" as any)}
+          onPress={() => router.push("/users/create" as any)}
         >
           <ThemedText style={styles.addButtonText}>+ Add User</ThemedText>
         </TouchableOpacity>
@@ -168,8 +168,12 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
     alignItems: "center",
+    marginTop: 16,
+  },
+  backButton: {
+    marginTop: 16,
     marginBottom: 16,
   },
   addButton: {
