@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import { UserService } from "@/src/services/userService";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 export interface User {
   id: string;
@@ -30,12 +30,9 @@ const initialState: UserState = {
 };
 
 // Async thunks
-export const fetchUsers = createAsyncThunk(
-  "users/fetchUsers",
-  async () => {
-    return await UserService.getAllUsers();
-  }
-);
+export const fetchUsers = createAsyncThunk("users/fetchUsers", async () => {
+  return await UserService.getAllUsers();
+});
 
 export const fetchUserById = createAsyncThunk(
   "users/fetchUserById",
@@ -166,4 +163,3 @@ const userSlice = createSlice({
 
 export const { clearCurrentUser, clearError } = userSlice.actions;
 export default userSlice.reducer;
-
