@@ -31,6 +31,7 @@
       "expo-router",
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
+      "@react-native-firebase/app-check",
       [
         "expo-splash-screen",
         {
@@ -48,12 +49,12 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
+    "owner": "lewisnguyenn",
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "c6287fd7-642c-4e33-84ae-245a3d08eba2"
+        "projectId": "bb142ab9-acf2-427a-83bc-168ad4198fd4"
       }
-    },
-    "owner": "lewisnguyenn"
+    }
   }
 }
