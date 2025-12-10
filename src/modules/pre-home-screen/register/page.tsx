@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Ionicons } from "@expo/vector-icons";
 import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 import { router } from "expo-router";
 
 const BRAND_BLUE = "#0D5BFF";
@@ -14,6 +15,7 @@ export default function RegisterScreen() {
   const [agree, setAgree] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<any>(null);
 
   const normalizedPhone = useMemo(() => {
     // Convert any user input to E.164 with default country VN (+84)
@@ -31,25 +33,61 @@ export default function RegisterScreen() {
   }, [phone]);
 
   const registerWithPhoneNumber = async () => {
-    if (!canSubmit || sending || !normalizedPhone) return;
-    setError(null);
-    setSending(true);
+    // if (!canSubmit || sending || !normalizedPhone) return;
+    // setError(null);
+    // setSending(true);
+    // try {
+    //   console.log("normalizedPhone", normalizedPhone);
+
+    //   router.push({
+    //     pathname: "/pre-home/register/otp",
+    //     params: {
+    //       phone: normalizedPhone,
+    //       verificationId: (confirm || (await auth().signInWithPhoneNumber(normalizedPhone)))
+    //         .verificationId,
+    //     },
+    //   });
+    // } catch (error) {
+    //   console.error(error);
+    //   setError("Không thể gửi OTP. Vui lòng thử lại.");
+    // } finally {
+    //   setSending(false);
+    // }
+
     try {
       console.log("normalizedPhone", normalizedPhone);
-
-      router.push({
-        pathname: "/pre-home/register/otp",
-        params: {
-          phone: normalizedPhone,
-          verificationId: (await auth().signInWithPhoneNumber(normalizedPhone))
-            .verificationId,
-        },
-      });
+      const confirmation = await auth().signInWithPhoneNumber(normalizedPhone);
+      setConfirm(confirmation);
     } catch (error) {
       console.error(error);
       setError("Không thể gửi OTP. Vui lòng thử lại.");
-    } finally {
-      setSending(false);
+    }
+  };
+
+  const confirmCode = async (code: string) => {
+    try {
+      const userCredential = await confirm?.confirm(code);
+
+      const user = userCredential.user;
+
+      const userDocument = await firestore().collection("users").doc(user.uid).get();
+
+      // DocumentSnapshot.exits() returns boolean; must be invoked
+      if (userDocument.exists()) {
+        setError("Số điện thoại đã được đăng ký. Vui lòng đăng nhập.");
+        return;
+      } else {
+        router.push({
+          pathname: "/pre-home/register/otp",
+          params: {
+            phone: normalizedPhone,
+            verificationId: userCredential.verificationId,
+          },
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      setError("Không thể xác thực OTP. Vui lòng thử lại.");
     }
   };
 
