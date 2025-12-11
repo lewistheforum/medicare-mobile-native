@@ -56,16 +56,21 @@ export default function RegisterScreen() {
 
     try {
       console.log("normalizedPhone", normalizedPhone);
+      setSending(true);
+
       const confirmation = await auth().signInWithPhoneNumber(normalizedPhone);
       setConfirm(confirmation);
     } catch (error) {
       console.error(error);
       setError("Không thể gửi OTP. Vui lòng thử lại.");
+    } finally {
+      setSending(false);
     }
   };
 
   const confirmCode = async (code: string) => {
     try {
+      console.log("confirmCode", code);
       const userCredential = await confirm?.confirm(code);
 
       const user = userCredential.user;

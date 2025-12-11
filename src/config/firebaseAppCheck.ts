@@ -2,6 +2,8 @@ import appCheck from "@react-native-firebase/app-check";
 
 // Determine if we're in development mode
 const DEV = __DEV__;
+// Allow forcing debug provider via env (useful for dev client build)
+const USE_DEBUG = DEV || process.env.EXPO_PUBLIC_APP_CHECK_DEBUG === "true";
 
 /**
  * Configure Firebase App Check
@@ -26,12 +28,16 @@ export const configureFirebaseAppCheck = async () => {
     // Configure App Check providers
     rnfbProvider.configure({
       android: {
-        provider: DEV ? "debug" : "playIntegrity",
-        debugToken: DEV ? "1D28FB4F-B3C6-45DB-A4A0-EA999DA047C1" : undefined, // Replace with actual debug token
+        provider: USE_DEBUG ? "debug" : "playIntegrity",
+        debugToken: USE_DEBUG
+          ? "1D28FB4F-B3C6-45DB-A4A0-EA999DA047C1" // Replace with actual debug token
+          : undefined,
       },
       apple: {
-        provider: DEV ? "debug" : "appAttestWithDeviceCheckFallback",
-        debugToken: DEV ? "1D28FB4F-B3C6-45DB-A4A0-EA999DA047C1" : undefined, // Replace with actual debug token
+        provider: USE_DEBUG ? "debug" : "appAttestWithDeviceCheckFallback",
+        debugToken: USE_DEBUG
+          ? "1D28FB4F-B3C6-45DB-A4A0-EA999DA047C1" // Replace with actual debug token
+          : undefined,
       },
     });
 
@@ -43,7 +49,7 @@ export const configureFirebaseAppCheck = async () => {
 
     console.log("✅ Firebase App Check configured successfully");
 
-    if (DEV) {
+    if (USE_DEBUG) {
       console.log(
         "⚠️ IMPORTANT: Replace 'YOUR_DEBUG_TOKEN' with your actual debug token"
       );
